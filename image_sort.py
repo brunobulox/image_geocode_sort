@@ -7,6 +7,12 @@ from shutil import copyfile
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
+"""
+This little utility is to sort out images based on the EXIF lat lng data and a reference list of known potential locations
+The images could have been taken at. It creates directories based on the location address and then copies the images to the 
+respective directories. The reference list is used as the geocoding can be off a bit and not provide the intended address. 
+A distance_threshold variable is defined to allow the distance from reference address tolerance to be tweaked.
+"""
 property_list_file = "/home/mark/pytest/property_list_entire.csv"
 #format is street address, city
 img_directory = '/home/mark/Pictures/Drone_shots/07-08-18/'
