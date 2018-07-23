@@ -7,12 +7,6 @@ from shutil import copyfile
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 
-"""
-This little utility is to sort out images based on the EXIF lat lng data and a reference list of known potential locations
-The images could have been taken at. It creates directories based on the location address and then copies the images to the 
-respective directories. The reference list is used as the geocoding can be off a bit and not provide the intended address. 
-A distance_threshold variable is defined to allow the distance from reference address tolerance to be tweaked.
-"""
 property_list_file = "/home/mark/pytest/property_list_entire.csv"
 #format is street address, city
 img_directory = '/home/mark/Pictures/Drone_shots/07-08-18/'
@@ -136,20 +130,36 @@ def get_gps_from_addy_list(filename):
     print("Geocoded address list in " + str(elapsed) + " seconds")
     return address_gps
 
+def create_prop_dir(root_dir, sub_dir, prop_dir):
+    if os.path.exists(root_dir):
+        if not os.path.exists(root_dir + sub_dir):
+            os.mkdir(root_dir + sub_dir)
+        if not os.path.exists(root_dir + sub_dir + prop_dir):
+            os.mkdir(root_dir + sub_dir + prop_dir)
+        path = root_dir + sub_dir + prop_dir
+        return (path)
+
+
 distance_threshold = .09 #475 feet
 gps_list = get_images_gps(img_directory)
-
+unmatched_images = []
 property_gps = get_gps_from_addy_list(property_list_file)
 
 for prop in property_gps:
-    print("Calculating image distances to " + str(prop[0]))
     for gps in gps_list:
         miles = geodesic(prop[1], gps[1]).miles
-        print(str(miles))
         if miles < distance_threshold:
-            dir_name = img_directory + str(prop[0])
-            if not os.path.exists(dir_name):
-                os.mkdir(dir_name)
-            print("Copying " + str(gps[0]))
-            copyfile(img_directory + str(gps[0]), str(dir_name) + "/" + str(gps[0]))
+            path = create_prop_dir(img_directory,"geo_sorted_images/", str(prop[0]))
+            copyfile(img_directory + str(gps[0]), path + "/" + str(gps[0]))
+            while (True):
+                try:
+                    unmatched_images.remove(gps[0])
+                    print("removed " + gps[0])
+                except ValueError:
+                    break
+        else:
+            unmatched_images.append(gps[0])
 
+unmatched_images = list(set(unmatched_images))
+
+print(unmatched_images)
